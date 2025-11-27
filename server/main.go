@@ -100,7 +100,31 @@ func main() {
 	fmt.Println("Сервер запущен на http://localhost:8080")
 	fmt.Println("Структура проекта:")
 	fmt.Printf("Корень: %s\n", getRootPath())
-	http.ListenAndServe(":8080", nil)
+	//http.ListenAndServe(":8080", nil)
+}
+
+// [ДАЛЕЕ: НЕ ОТНОСИТСЯ К ОСНОВНОЙ РАЗРАБОТКЕ]
+
+// PrintBoardSimple выводит упрощенную версию доски
+func (node *GoNode) PrintBoardSimple(boardSize int) {
+
+	fmt.Println("Доска Го:")
+	for row := 0; row < boardSize; row++ {
+		for col := 0; col < boardSize; col++ {
+			index := row*boardSize + col
+			stone := node.Position[index]
+
+			switch stone {
+			case black:
+				fmt.Print("B ")
+			case white:
+				fmt.Print("W ")
+			case empty:
+				fmt.Print(". ")
+			}
+		}
+		fmt.Println()
+	}
 }
 
 func initBoard() {
@@ -124,14 +148,6 @@ func initBoard() {
 		fmt.Printf("Жива: %t\n", group.IsAlive())
 		fmt.Printf("Мертва: %t\n", group.IsDead())
 
-		positions := group.GetStonePositions()
-		fmt.Printf("Позиции камней: ")
-		for _, pos := range positions {
-			row := pos/19 + 1
-			col := pos % 19
-			fmt.Printf("%c%d ", 'A'+col, row)
-		}
-		fmt.Println()
 	}
 
 	// Тестируем с мертвой группой (окруженной)
