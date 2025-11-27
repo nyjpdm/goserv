@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Моя первая Go веб-страница</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        form { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        input, button { margin: 5px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Добро пожаловать в мое Go приложение!</h1>
+        
+        <!-- Простая форма -->
+        <form action="/form" method="POST">
+            <h3>Отправка формы:</h3>
+            <input type="text" name="name" placeholder="Ваше имя" required>
+            <input type="number" name="age" placeholder="Ваш возраст" required>
+            <button type="submit">Отправить</button>
+        </form>
+        
+        <!-- AJAX запрос -->
+        <div>
+            <h3>AJAX запрос:</h3>
+            <input type="text" id="nameInput" placeholder="Введите имя">
+            <button onclick="sendRequest()">Отправить запрос</button>
+            <div id="result"></div>
+        </div>
+        
+        <!-- Простая ссылка с параметрами -->
+        <div>
+            <h3>Калькулятор:</h3>
+            <a href="/calc?a=5&b=3">Посчитать 5 + 3</a>
+        </div>
+    </div>
+
+    <script>
+        function sendRequest() {
+            const name = document.getElementById('nameInput').value || 'Гость';
+            
+            // Отправляем GET запрос к API
+            fetch(`/api?name=${encodeURIComponent(name)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = 
+                        `<strong>Ответ сервера:</strong> ${data.message}`;
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                });
+        }
+    </script>
+</body>
+</html>
