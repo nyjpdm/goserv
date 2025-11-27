@@ -1,120 +1,20 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"html/template"
-	"net/http"
-	"path/filepath"
-	"runtime"
-	"strconv"
 )
 
-// Получаем абсолютный путь к корневой папке проекта
-func getRootPath() string {
-	// Получаем путь к текущему файлу
-	_, filename, _, _ := runtime.Caller(0)
-	// Возвращаемся на две папки вверх (из server/ в корень)
-	return filepath.Dir(filepath.Dir(filename))
-}
-
-// Обработчик главной страницы
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	rootPath := getRootPath()
-	htmlPath := filepath.Join(rootPath, "static", "../index.html")
-	http.ServeFile(w, r, htmlPath)
-}
-
-// Обработчик API
-func apiHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	name := r.URL.Query().Get("name")
-	if name == "" {
-		name = "Гость"
-	}
-	fmt.Println("client board")
-	fmt.Println(name)
-	responseData := map[string]string{
-		"message": fmt.Sprintf("returning board %s", name),
-		"status":  "ok",
-	}
-	jsonData, err := json.Marshal(responseData)
-	if err != nil {
-		http.Error(w, `{"error": "Внутренняя ошибка сервера"}`, http.StatusInternalServerError)
-		return
-	}
-	w.Write(jsonData)
-}
-
-// Обработчик формы
-func formHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
-		return
-	}
-
-	name := r.FormValue("name")
-	age := r.FormValue("age")
-
-	tmpl := `
-    <html>
-        <body>
-            <h1>Полученные данные:</h1>
-            <p>Имя: {{.Name}}</p>
-            <p>Возраст: {{.Age}}</p>
-            <a href="/">Назад</a>
-        </body>
-    </html>
-    `
-
-	data := struct {
-		Name string
-		Age  string
-	}{name, age}
-
-	t := template.Must(template.New("result").Parse(tmpl))
-	t.Execute(w, data)
-}
-
-// Обработчик калькулятора
-func calcHandler(w http.ResponseWriter, r *http.Request) {
-	aStr := r.URL.Query().Get("a")
-	bStr := r.URL.Query().Get("b")
-
-	a, _ := strconv.Atoi(aStr)
-	b, _ := strconv.Atoi(bStr)
-
-	result := a + b
-	fmt.Fprintf(w, "Сумма %d + %d = %d", a, b, result)
-}
-
-func main() {
-	// Регистрируем обработчики
-	initBoard()
-	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/api", apiHandler)
-	http.HandleFunc("/form", formHandler)
-	http.HandleFunc("/calc", calcHandler)
-
-	fmt.Println("Сервер запущен на http://localhost:8080")
-	fmt.Println("Структура проекта:")
-	fmt.Printf("Корень: %s\n", getRootPath())
-	//http.ListenAndServe(":8080", nil)
-}
-
-// [ДАЛЕЕ: НЕ ОТНОСИТСЯ К ОСНОВНОЙ РАЗРАБОТКЕ]
+// [НЕ ОТНОСИТСЯ К ОСНОВНОЙ РАЗРАБОТКЕ]
 
 // PrintBoardSimple выводит упрощенную версию доски
 func (node *GoNode) PrintBoardSimple(boardSize int) {
-
 	fmt.Println("Доска Го:")
 	for row := 0; row < boardSize; row++ {
 		for col := 0; col < boardSize; col++ {
 			index := row*boardSize + col
-			stone := node.Position[index]
+			Point := node.Position[index]
 
-			switch stone {
+			switch Point {
 			case black:
 				fmt.Print("B ")
 			case white:
@@ -127,48 +27,281 @@ func (node *GoNode) PrintBoardSimple(boardSize int) {
 	}
 }
 
-func initBoard() {
-	tree := NewGoTree(GameSettings{})
+func main() {
+	fmt.Println("=== ТЕСТ ЗАХВАТА КАМНЕЙ В ГО ===")
 
-	// Создаем тестовую позицию с группой
-	tree.Current.Position[3*19+3] = black // D4
-	tree.Current.Position[3*19+4] = black // E4
-	tree.Current.Position[4*19+3] = black // D5
+	// Тест 1: Простой захват одного камня
+	//fmt.Println("\n1. ТЕСТ: Захват одного камня в центре")
+	//testSingleCapture()
 
-	fmt.Println("Тестовая доска:")
-	tree.Current.PrintBoardSimple(19)
+	// Тест 2: Захват группы из нескольких камней
+	//fmt.Println("\n2. ТЕСТ: Захват группы из двух камней")
+	//testGroupCapture()
 
-	// Тестируем создание группы
-	group := NewGroupFromPosition(tree.Current.Position, 3*19+3, 19)
-	if group != nil {
-		fmt.Printf("\n=== Информация о группе ===\n")
-		fmt.Printf("Цвет: %c\n", group.Color)
-		fmt.Printf("Камней: %d\n", group.NumberOfStones)
-		fmt.Printf("Дыханий: %d\n", group.Dame)
-		fmt.Printf("Жива: %t\n", group.IsAlive())
-		fmt.Printf("Мертва: %t\n", group.IsDead())
+	// Тест 3: Самоубийственный ход
+	//fmt.Println("\n3. ТЕСТ: Проверка самоубийственного хода")
+	//testSuicideMove()
 
+	// Тест 4: Правило ко
+	fmt.Println("\n4. ТЕСТ: Проверка правила ко")
+	testTrickyKo()
+	fmt.Println("\n 5. защелка")
+	testClick()
+	fmt.Println("6. Вырожденная защелка")
+	testSmallClk()
+}
+
+func testSingleCapture() {
+	settings := GameSettings{BoardSize: 5}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Доска 5x5: создаем ситуацию для захвата")
+
+	// Белые ставят камень
+	tree.MakeMove(12) // Центр доски 5x5 (позиция 12)
+	fmt.Println("Белые -> позиция 12 (центр)")
+	printCurrentBoard(tree)
+
+	// Черные окружают белый камень
+	tree.MakeMove(7)  // Сверху
+	tree.MakeMove(9)  //white
+	tree.MakeMove(11) // Слева
+	tree.MakeMove(10)
+	tree.MakeMove(13) // Справа
+	tree.MakeMove(14)
+	tree.MakeMove(17) // Снизу
+
+	fmt.Println("Черные окружили белый камень:")
+	printCurrentBoard(tree)
+
+	// Проверяем, что белый камень еще на доске
+	if tree.Current.Position[12] == white {
+		fmt.Println("✅ Белый камень еще на доске (ожидаемо)")
 	}
 
-	// Тестируем с мертвой группой (окруженной)
-	fmt.Println("\n=== Тест мертвой группы ===")
-	tree2 := NewGoTree(GameSettings{BoardSize: 5})
-	// Создаем окруженную группу
-	tree2.Current.Position[1*5+1] = black
-	tree2.Current.Position[1*5+2] = white
-	tree2.Current.Position[1*5+3] = white
-	tree2.Current.Position[2*5+1] = white
-	tree2.Current.Position[2*5+2] = black
-	tree2.Current.Position[2*5+3] = white
-	tree2.Current.Position[3*5+1] = white
-	tree2.Current.Position[3*5+2] = white
-	tree2.Current.Position[3*5+3] = white
-
-	tree2.Current.PrintBoardSimple(5)
-
-	deadGroup := NewGroupFromPosition(tree2.Current.Position, 2*5+2, 5)
-	if deadGroup != nil {
-		fmt.Printf("Мертвая группа - дыханий: %d, жива: %t\n",
-			deadGroup.Dame, deadGroup.IsAlive())
+	// Черные завершают захват
+	err := tree.MakeMove(12)
+	if err != nil {
+		fmt.Printf("❌ Ошибка захвата: %v\n", err)
+		return
 	}
+
+	fmt.Println("Черные завершили захват:")
+	printCurrentBoard(tree)
+
+	// Проверяем результат
+	if tree.Current.Position[12] == empty {
+		fmt.Println("✅ УСПЕХ: Белый камень захвачен и удален!")
+	} else {
+		fmt.Printf("❌ ПРОВАЛ: Позиция 12 = %c (должна быть пустой)\n", tree.Current.Position[12])
+	}
+
+	if tree.Current.BlackCaptures == 1 {
+		fmt.Println("✅ УСПЕХ: Счетчик захватов корректен!")
+	} else {
+		fmt.Printf("❌ ПРОВАЛ: Захвачено %d камней (должно быть 1)\n", tree.Current.BlackCaptures)
+	}
+}
+
+func testClick() {
+	settings := GameSettings{BoardSize: 7}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Защелка")
+
+	tree.MakeMove(4)
+	tree.MakeMove(5)
+	tree.MakeMove(11)
+	tree.MakeMove(12)
+
+	tree.MakeMove(19)
+	tree.MakeMove(0)
+	tree.MakeMove(20)
+	tree.MakeMove(1)
+
+	tree.MakeMove(6)
+	printCurrentBoard(tree)
+	tree.MakeMove(13)
+	tree.MakeMove(6)
+	printCurrentBoard((tree))
+	if tree.Current.BlackCaptures == 3 {
+		fmt.Println("✅ успех, защелкой захвачено 3 камня")
+	}
+}
+
+func testSmallClk() {
+	settings := GameSettings{BoardSize: 7}
+	tree := NewGoTree(settings)
+
+	fmt.Println("НЕ защелка")
+
+	tree.MakeMove(5)
+	tree.MakeMove(13)
+	tree.MakeMove(12)
+	tree.MakeMove(0)
+
+	tree.MakeMove(20)
+	tree.MakeMove(1)
+	printCurrentBoard(tree)
+	tree.MakeMove(6)
+	if tree.Current.BlackCaptures == 1 {
+		fmt.Println("✅ Успех, захвачен 1 камень")
+	}
+	if tree.MakeMove(13) == nil {
+		fmt.Print("❌ суицидальный ход белых должен быть запрещен")
+	}
+
+}
+
+func testTrickyKo() {
+	settings := GameSettings{BoardSize: 5}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Проверка правила ко")
+
+	// Создаем ситуацию ко
+	tree.MakeMove(7) // B
+	tree.MakeMove(4) // W
+	tree.MakeMove(1) // B
+	tree.MakeMove(2) // W
+	tree.MakeMove(0) // B
+	tree.MakeMove(8) // W
+	tree.MakeMove(24)
+	tree.MakeMove(23)
+	fmt.Println("Создана ситуация ко:")
+	//	printCurrentBoard(tree)
+
+	// Черные захватывают белый камень
+	fmt.Print(tree.MakeMove(3)) // B - захватывает белый в 7
+	fmt.Print(tree.MakeMove(2))
+	fmt.Println("После захвата белого камня:")
+	//	printCurrentBoard(tree)
+
+}
+
+func testGroupCapture() {
+	settings := GameSettings{BoardSize: 5}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Захват группы из двух соединенных камней")
+
+	// Белые ставят два соединенных камня
+	tree.MakeMove(6) // (1,1)
+	tree.MakeMove(7) // (1,2) - соединен с первым
+	printCurrentBoard(tree)
+
+	// Черные окружают группу
+	tree.MakeMove(1)  // Сверху-слева
+	tree.MakeMove(2)  // Сверху
+	tree.MakeMove(3)  // Сверху-справа
+	tree.MakeMove(5)  // Слева
+	tree.MakeMove(8)  // Справа
+	tree.MakeMove(11) // Снизу-слева
+	tree.MakeMove(12) // Снизу
+	tree.MakeMove(13) // Снизу-справа
+
+	fmt.Println("Черные окружили группу белых:")
+	printCurrentBoard(tree)
+
+	// Захватываем группу
+	err := tree.MakeMove(10)
+	if err != nil {
+		fmt.Printf("❌ Ошибка захвата группы: %v\n", err)
+		return
+	}
+
+	fmt.Println("После захвата группы:")
+	printCurrentBoard(tree)
+
+	// Оба белых камня должны быть удалены
+	if tree.Current.Position[6] == empty && tree.Current.Position[7] == empty {
+		fmt.Println("✅ УСПЕХ: Оба белых камня захвачены!")
+	} else {
+		fmt.Printf("❌ ПРОВАЛ: Камни не удалены: pos6=%c, pos7=%c\n",
+			tree.Current.Position[6], tree.Current.Position[7])
+	}
+
+	if tree.Current.BlackCaptures == 2 {
+		fmt.Println("✅ УСПЕХ: Захвачено 2 камня!")
+	} else {
+		fmt.Printf("❌ ПРОВАЛ: Захвачено %d камней (должно быть 2)\n", tree.Current.BlackCaptures)
+	}
+}
+
+func testSuicideMove() {
+	settings := GameSettings{BoardSize: 5}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Проверка запрета самоубийственного хода")
+
+	// Черные создают полностью окруженную точку
+	tree.MakeMove(6)  //
+	tree.MakeMove(7)  //
+	tree.MakeMove(8)  //
+	tree.MakeMove(11) //
+	tree.MakeMove(14) //
+	tree.MakeMove(13) //
+	tree.MakeMove(19) //
+	tree.MakeMove(17) //
+	// Позиция 12 полностью окружена
+
+	fmt.Println("Создана полностью окруженная позиция 12:")
+	printCurrentBoard(tree)
+
+	// Белые пытаются пойти в окруженную точку - должно быть самоубийство
+	err := tree.MakeMove(12)
+	if err != nil {
+		fmt.Printf("✅ УСПЕХ: Самоубийственный ход запрещен: %v\n", err)
+	} else {
+		fmt.Println("❌ ПРОВАЛ: Самоубийственный ход разрешен!")
+		printCurrentBoard(tree)
+	}
+}
+
+func testKoRule() {
+	settings := GameSettings{BoardSize: 5}
+	tree := NewGoTree(settings)
+
+	fmt.Println("Проверка правила ко")
+
+	// Создаем ситуацию ко
+	tree.MakeMove(7) // B
+	tree.MakeMove(4) // W
+	tree.MakeMove(1) // B
+	tree.MakeMove(2) // W
+	tree.MakeMove(0) // B
+	tree.MakeMove(8) // W
+
+	fmt.Println("Создана ситуация ко:")
+	printCurrentBoard(tree)
+
+	// Черные захватывают белый камень
+	tree.MakeMove(3) // B - захватывает белый в 7
+	tree.MakeMove(2)
+	fmt.Println("После захвата белого камня:")
+	printCurrentBoard(tree)
+
+	// Белые немедленно пытаются вернуться - должно быть ко
+	err := tree.MakeMove(3)
+	if err != nil {
+		fmt.Printf("✅ УСПЕХ: Правило ко работает: %v\n", err)
+	} else {
+		fmt.Println("❌ ПРОВАЛ: Правило ко не сработало!")
+		printCurrentBoard(tree)
+	}
+}
+
+func printCurrentBoard(tree *GoTree) {
+	fmt.Println("Текущая доска:")
+	boardSize := tree.BoardSize
+	for i := 0; i < boardSize; i++ {
+		for j := 0; j < boardSize; j++ {
+			idx := i*boardSize + j
+			fmt.Printf("%c ", tree.Current.Position[idx])
+		}
+		fmt.Println()
+	}
+	fmt.Printf("Ход: %d, Цвет: %c, Захваты: B=%d W=%d\n\n",
+		tree.Current.MoveNumber, tree.Current.CurrentColor,
+		tree.Current.BlackCaptures, tree.Current.WhiteCaptures)
 }
