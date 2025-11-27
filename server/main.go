@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -20,7 +21,7 @@ func getRootPath() string {
 // Обработчик главной страницы
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	rootPath := getRootPath()
-	htmlPath := filepath.Join(rootPath, "static", "index.html")
+	htmlPath := filepath.Join(rootPath, "static", "../index.html")
 	http.ServeFile(w, r, htmlPath)
 }
 
@@ -32,9 +33,18 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	if name == "" {
 		name = "Гость"
 	}
-
-	response := fmt.Sprintf(`{"message": "Привет, %s!", "status": "ok"}`, name)
-	fmt.Fprint(w, response)
+	fmt.Println("client board")
+	fmt.Println(name)
+	responseData := map[string]string{
+		"message": fmt.Sprintf("returning board %s", name),
+		"status":  "ok",
+	}
+	jsonData, err := json.Marshal(responseData)
+	if err != nil {
+		http.Error(w, `{"error": "Внутренняя ошибка сервера"}`, http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonData)
 }
 
 // Обработчик формы
