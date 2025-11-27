@@ -108,6 +108,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	var totalCaptured int
 	var capturedChains []*Chain
 	neighbors := getNeighbors(move, tree.BoardSize)
+	enemyNeighborCount := 0
 
 	// Для каждого соседнего-вражеского камня проверяем жизнь его группы 
 	// # Адреса новых переменных enemyChain уникальны! => корректно
@@ -118,13 +119,14 @@ func (tree *GoTree) MakeMove(move int) error {
 				totalCaptured += enemyChain.StoneCount
 				capturedChains = append(capturedChains, enemyChain)
 			}
+			enemyNeighborCount++
 		}
 	}
 
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
 	if totalCaptured >= 1{
-		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor {
+		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 {
 			return fmt.Errorf("Ko violation")
 		}
 	} else {
