@@ -20,7 +20,7 @@ func main() {
 	} else {
 		printCurrentBoard(tree)
 	}
-		err = tree.MakeMove(0*7 + 2) //B
+	err = tree.MakeMove(0*7 + 2) //B
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -33,7 +33,7 @@ func main() {
 		printCurrentBoard(tree)
 	}
 
-	err = tree.MakeMove(0*7 + 0)  //B
+	err = tree.MakeMove(0*7 + 0) //B
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -46,6 +46,19 @@ func main() {
 	} else {
 		printCurrentBoard(tree)
 	}
+	runServer()
+}
+func stringBoard(tree *GoTree) string {
+	res := ""
+	boardSize := tree.BoardSize
+	for i := 0; i < boardSize; i++ {
+		for j := 0; j < boardSize; j++ {
+			idx := i*boardSize + j
+			res += string(tree.CurrentNode.Board[idx])
+		}
+		res += "\n"
+	}
+	return res
 }
 
 func printCurrentBoard(tree *GoTree) {
@@ -59,7 +72,7 @@ func printCurrentBoard(tree *GoTree) {
 		}
 		fmt.Println()
 	}
-	fmt.Printf("\nХод: %d, Следующий: %c, Захваты: B=%d W=%d\n\n", 
+	fmt.Printf("\nХод: %d, Следующий: %c, Захваты: B=%d W=%d\n\n",
 		tree.CurrentNode.NodeOrder, tree.CurrentNode.LastMoveColor,
 		tree.CurrentNode.BlackCaptures, tree.CurrentNode.WhiteCaptures)
 }

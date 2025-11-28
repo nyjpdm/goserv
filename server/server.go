@@ -72,7 +72,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	var request ApiRequest
 	err := json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
-		http.Error(w, `{"error": "bad json"}`, http.StatusBadRequest)
+		http.Error(w, `{"error": "badm json"}`, http.StatusBadRequest)
 		return
 	}
 
@@ -80,7 +80,11 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Получено от клиента:")
 	fmt.Println("Name:", request.Name)
 	fmt.Printf("Move: %+v\n", request.Move)
-	ourgame.MakeMove(request.Move.Y*ourgame.BoardSize + request.Move.X)
+	if request.Move.X < 0 || request.Move.X > ourgame.BoardSize-1 || request.Move.Y < 0 || request.Move.Y > ourgame.BoardSize-1 {
+		http.Error(w, `{"error": "move outside bounds"}`, http.StatusBadRequest)
+		return
+	}
+	move_result := ourgame.MakeMove(request.Move.Y*ourgame.BoardSize + request.Move.X)
 
 	//index = request.Move %
 	fmt.Println("Отправляем на клиент:")
@@ -89,6 +93,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"status":     "ok",
 		"msg":        "json received",
+		"accepted":   move_result == nil,
 		"boardState": stringBoard(ourgame), // возвращаем клиенту
 	}
 

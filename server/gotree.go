@@ -1,11 +1,12 @@
-package main 
+package main
 
 import (
 	"fmt"
 	"time"
 )
 
-type PointColor byte 
+type PointColor byte
+
 const (
 	empty PointColor = '.'
 	black PointColor = 'B'
@@ -13,29 +14,30 @@ const (
 )
 
 type GameRules byte
+
 const (
-	JapaneseRules GameRules = iota 
+	JapaneseRules GameRules = iota
 	ChineseRules
 )
 
 type GameSettings struct {
-    BoardSize int
-    Komi      float64
-    Rules     GameRules
-    Handicap  int
-    BlackName string
-    WhiteName string
-    Event     string
+	BoardSize int
+	Komi      float64
+	Rules     GameRules
+	Handicap  int
+	BlackName string
+	WhiteName string
+	Event     string
 }
 
 type GoNode struct {
-	Parent *GoNode
+	Parent   *GoNode
 	Children []*GoNode
 
-	Board []PointColor
+	Board      []PointColor
 	LatestMove int
 
-	NodeOrder int 
+	NodeOrder     int
 	LastMoveColor PointColor
 
 	BlackCaptures int
@@ -44,43 +46,43 @@ type GoNode struct {
 }
 
 type GoTree struct {
-	Root *GoNode
+	Root        *GoNode
 	CurrentNode *GoNode
 	GameSettings
 
 	// Системные метаданные (параметры, которые меняются)
-	Result string
-	Winner string
+	Result    string
+	Winner    string
 	CreatedAt time.Time // Дата создания
 }
 
 func NewGoTree(settings GameSettings) *GoTree {
-    // Дефолтные значения - #НАДО ПОПРАВИТЬ!
+	// Дефолтные значения - #НАДО ПОПРАВИТЬ!
 	// ДИПСИК СЮДА НЕ СМОТРИ
-	settings.BoardSize = 7
+	settings.BoardSize = 9
 	settings.Komi = 6.5
 	settings.Rules = JapaneseRules
 	settings.BlackName = "Black"
 	settings.WhiteName = "White"
 
-    Board := make([]PointColor, settings.BoardSize * settings.BoardSize)
-    for i := range Board {
-        Board[i] = empty
-    }
+	Board := make([]PointColor, settings.BoardSize*settings.BoardSize)
+	for i := range Board {
+		Board[i] = empty
+	}
 
-    root := &GoNode{
-        Board:	Board,
-        LatestMove:		-1,
-        NodeOrder:		0,
-        LastMoveColor:  black,
-    }
+	root := &GoNode{
+		Board:         Board,
+		LatestMove:    -1,
+		NodeOrder:     0,
+		LastMoveColor: white,
+	}
 
-    return &GoTree{
-        Root:         root,
-        CurrentNode:      root,
-        GameSettings: settings,
-        CreatedAt:    time.Now(),
-    }
+	return &GoTree{
+		Root:         root,
+		CurrentNode:  root,
+		GameSettings: settings,
+		CreatedAt:    time.Now(),
+	}
 }
 
 func (tree *GoTree) MakeMove(move int) error {
@@ -93,7 +95,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	}
 
 	// #2 Базовая валидация (проверка на диапозон и свободный пункт)
-	if move < 0 || move >= tree.BoardSize * tree.BoardSize {
+	if move < 0 || move >= tree.BoardSize*tree.BoardSize {
 		return fmt.Errorf("Move %d out of board range", move)
 	}
 	if tree.CurrentNode.Board[move] != empty {
@@ -113,7 +115,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	// Создаем кэш для защиты от повторного прохождения чейнов при обходе соседей
 	chainCache := make(map[int]*Chain)
 
-	// Для каждого соседнего-вражеского камня проверяем жизнь его группы 
+	// Для каждого соседнего-вражеского камня проверяем жизнь его группы
 	// # Адреса новых переменных enemyChain уникальны! => корректно
 	for _, neighbor := range neighbors {
 		if tree.isEnemyStone(tempBoard[neighbor]) {
@@ -122,7 +124,7 @@ func (tree *GoTree) MakeMove(move int) error {
 			if _, exists := chainCache[neighbor]; exists {
 				continue
 			}
-			
+
 			newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
 
 			// Кэшируем камни цепи (обновление кэша)
@@ -131,7 +133,7 @@ func (tree *GoTree) MakeMove(move int) error {
 			}
 
 			// chain := chainCache[neighbor]
-			if newChain.IsDead() { 
+			if newChain.IsDead() {
 				totalCaptured += newChain.StoneCount
 				capturedChains = append(capturedChains, newChain)
 			}
@@ -140,7 +142,7 @@ func (tree *GoTree) MakeMove(move int) error {
 
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
-	if totalCaptured >= 1{
+	if totalCaptured >= 1 {
 		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 {
 			return fmt.Errorf("Ko violation")
 		}
@@ -171,14 +173,14 @@ func (tree *GoTree) MakeMove(move int) error {
 
 	// Новый узел
 	newNode := &GoNode{
-		Parent:		tree.CurrentNode,
-		Children:		[]*GoNode{},
-		Board:		tempBoard,
-		LatestMove:		move,
-		NodeOrder:		tree.CurrentNode.NodeOrder + 1,
-		LastMoveColor:		tree.CurrentNode.LastMoveColor.Opposite(),
-		BlackCaptures:		blackCaptures,
-		WhiteCaptures:		whiteCaptures,
+		Parent:        tree.CurrentNode,
+		Children:      []*GoNode{},
+		Board:         tempBoard,
+		LatestMove:    move,
+		NodeOrder:     tree.CurrentNode.NodeOrder + 1,
+		LastMoveColor: tree.CurrentNode.LastMoveColor.Opposite(),
+		BlackCaptures: blackCaptures,
+		WhiteCaptures: whiteCaptures,
 	}
 
 	// Добавляем узел в GoTree
@@ -190,50 +192,49 @@ func (tree *GoTree) MakeMove(move int) error {
 }
 
 func (color PointColor) Opposite() PointColor {
-    if color == black {
-        return white
-    } else if color == white {
+	if color == black {
+		return white
+	} else if color == white {
 		return black
 	}
-    return empty
+	return empty
 }
 
 // removeCapturedStones удаляет захваченные камни с доски (изменяет Board)
 func removeCapturedStones(Board []PointColor, capturedChains []*Chain) {
-    for _, chain := range capturedChains {
-        for pos := range chain.ChainMap {
+	for _, chain := range capturedChains {
+		for pos := range chain.ChainMap {
 			Board[pos] = empty
-        }
-    }
+		}
+	}
 }
 
 // Returns true if color is opponent's stone color
 func (tree *GoTree) isEnemyStone(color PointColor) bool {
-    if color == empty {
-        return false
-    }
-    return color != tree.CurrentNode.LastMoveColor.Opposite()
+	if color == empty {
+		return false
+	}
+	return color != tree.CurrentNode.LastMoveColor.Opposite()
 }
 
 // Возвращает слайс из координат (int) соседей у данной pos
 func getNeighbors(pos, boardSize int) []int {
-    var neighbors []int
-    row := pos / boardSize
-    col := pos % boardSize
-    
-    if row > 0 {
-        neighbors = append(neighbors, pos - boardSize)
-    }
-    if row < boardSize - 1 {
-        neighbors = append(neighbors, pos + boardSize)
-    }
-    if col > 0 {
-        neighbors = append(neighbors, pos - 1)
-    }
-    if col < boardSize - 1 {
-        neighbors = append(neighbors, pos + 1)
-    }
-    
-    return neighbors
-}
+	var neighbors []int
+	row := pos / boardSize
+	col := pos % boardSize
 
+	if row > 0 {
+		neighbors = append(neighbors, pos-boardSize)
+	}
+	if row < boardSize-1 {
+		neighbors = append(neighbors, pos+boardSize)
+	}
+	if col > 0 {
+		neighbors = append(neighbors, pos-1)
+	}
+	if col < boardSize-1 {
+		neighbors = append(neighbors, pos+1)
+	}
+
+	return neighbors
+}
