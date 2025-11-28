@@ -27,7 +27,7 @@ func main() {
 	} else {
 		printCurrentBoard(tree)
 	}
-		err = tree.MakeMove(0*7 + 2) //B
+	err = tree.MakeMove(0*7 + 2) //B
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -40,7 +40,7 @@ func main() {
 		printCurrentBoard(tree)
 	}
 
-	err = tree.MakeMove(0*7 + 0)  //B
+	err = tree.MakeMove(0*7 + 0) //B
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -53,31 +53,32 @@ func main() {
 	} else {
 		printCurrentBoard(tree)
 	}
-	
+	runServer()
+
 	// fmt.Println("=== ИГРА ГО ===")
 	// fmt.Println("Формат ввода: i j (например: 1 2)")
 	// fmt.Println("Выход: quit")
 	// fmt.Println()
-	
+
 	// // Показываем пустую доску в начале
 	// printCurrentBoard(tree)
-	
+
 	// scanner := bufio.NewScanner(os.Stdin)
 	// moveCount := 0
-	
+
 	// for {
 	// 	moveCount++
 	// 	fmt.Printf("Ход %d (%c) > ", moveCount, tree.Current.CurrentColor)
-		
+
 	// 	if !scanner.Scan() {
 	// 		break
 	// 	}
-		
+
 	// 	input := strings.TrimSpace(scanner.Text())
 	// 	if input == "quit" || input == "exit" {
 	// 		break
 	// 	}
-		
+
 	// 	// Парсим ввод
 	// 	parts := strings.Split(input, " ")
 	// 	if len(parts) != 2 {
@@ -85,23 +86,23 @@ func main() {
 	// 		moveCount-- // Не считаем этот ввод как ход
 	// 		continue
 	// 	}
-		
+
 	// 	i, err1 := strconv.Atoi(parts[0])
 	// 	j, err2 := strconv.Atoi(parts[1])
-		
+
 	// 	if err1 != nil || err2 != nil {
 	// 		fmt.Println("❌ Ошибка: i и j должны быть числами")
 	// 		moveCount--
 	// 		continue
 	// 	}
-		
+
 	// 	// Проверяем границы
 	// 	if i < 0 || i >= 7 || j < 0 || j >= 7 {
 	// 		fmt.Println("❌ Ошибка: i и j должны быть от 0 до 6")
 	// 		moveCount--
 	// 		continue
 	// 	}
-		
+
 	// 	// Вычисляем позицию и делаем ход
 	// 	pos := i*7 + j
 	// 	err := tree.MakeMove(pos)
@@ -109,13 +110,26 @@ func main() {
 	// 		fmt.Printf("❌ Ошибка хода: %v\n\n", err)
 	// 		moveCount-- // Не считаем неудачный ход
 	// 	} else {
-	// 		fmt.Printf("✅ Ход принят: %c -> (%d,%d)\n\n", 
+	// 		fmt.Printf("✅ Ход принят: %c -> (%d,%d)\n\n",
 	// 			tree.Current.Parent.CurrentColor, i, j)
 	// 		printCurrentBoard(tree)
 	// 	}
 	// }
-	
+
 	// fmt.Println("Игра завершена!")
+}
+
+func stringBoard(tree *GoTree) string {
+	res := ""
+	boardSize := tree.BoardSize
+	for i := 0; i < boardSize; i++ {
+		for j := 0; j < boardSize; j++ {
+			idx := i*boardSize + j
+			res += string(tree.CurrentNode.Board[idx])
+		}
+		res += "\n"
+	}
+	return res
 }
 
 func printCurrentBoard(tree *GoTree) {
@@ -129,10 +143,11 @@ func printCurrentBoard(tree *GoTree) {
 		}
 		fmt.Println()
 	}
-	fmt.Printf("\nХод: %d, Следующий: %c, Захваты: B=%d W=%d\n\n", 
+	fmt.Printf("\nХод: %d, Следующий: %c, Захваты: B=%d W=%d\n\n",
 		tree.CurrentNode.NodeOrder, tree.CurrentNode.LastMoveColor,
 		tree.CurrentNode.BlackCaptures, tree.CurrentNode.WhiteCaptures)
 }
+
 // package main
 
 // import (
