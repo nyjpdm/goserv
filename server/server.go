@@ -18,8 +18,9 @@ type MoveQuery struct {
 	Timestamp  string `json:"timestamp"`
 }
 type ApiRequest struct {
-	Name string    `json:"name"`
-	Move MoveQuery `json:"move"`
+	Name   string    `json:"name"`
+	Move   MoveQuery `json:"move"`
+	Action string    `json:"action"`
 }
 
 type Server struct {
@@ -79,22 +80,29 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	// выводим на сервер
 	fmt.Println("Получено от клиента:")
 	fmt.Println("Name:", request.Name)
+	fmt.Println("Action: ", request.Action)
 	fmt.Printf("Move: %+v\n", request.Move)
 	if request.Move.X < 0 || request.Move.X > ourgame.BoardSize-1 || request.Move.Y < 0 || request.Move.Y > ourgame.BoardSize-1 {
 		http.Error(w, `{"error": "move outside bounds"}`, http.StatusBadRequest)
 		return
 	}
-	move_result := ourgame.MakeMove(request.Move.Y*ourgame.BoardSize + request.Move.X)
-
+	move_result := err
+	if request.Action == "clear board" {
+		ourgame = NewGoTree(GameSettings{})
+	} else {
+		move_result = ourgame.MakeMove(request.Move.Y*ourgame.BoardSize + request.Move.X)
+	}
 	//index = request.Move %
 	fmt.Println("Отправляем на клиент:")
 	fmt.Print(stringBoard(ourgame))
+	fmt.Println(string(ourgame.CurrentNode.LastMoveColor.Opposite()))
 	// формируем ответ
 	response := map[string]interface{}{
-		"status":     "ok",
-		"msg":        "json received",
-		"accepted":   move_result == nil,
-		"boardState": stringBoard(ourgame), // возвращаем клиенту
+		"status":       "ok",
+		"msg":          "json received",
+		"accepted":     move_result == nil,
+		"boardState":   stringBoard(ourgame), // возвращаем клиенту
+		"playingColor": string(ourgame.CurrentNode.LastMoveColor.Opposite()),
 	}
 
 	json.NewEncoder(w).Encode(response)
