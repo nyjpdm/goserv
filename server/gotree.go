@@ -119,19 +119,21 @@ func (tree *GoTree) MakeMove(move int) error {
 		if tree.isEnemyStone(tempBoard[neighbor]) {
 			enemyNeighborCount++
 
-			if _, exists := chainCache[neighbor]; !exists {
-				newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
+			if _, exists := chainCache[neighbor]; exists {
+				continue
+			}
+			
+			newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
 
-				// Кэшируем все камни цепи
-				for pos := range newChain.ChainMap {
-					chainCache[pos] = newChain
-				}
+			// Кэшируем камни цепи (обновление кэша)
+			for pos := range newChain.ChainMap {
+				chainCache[pos] = newChain
 			}
 
-			chain := chainCache[neighbor]
-			if chain.IsDead() { 
-				totalCaptured += chain.StoneCount
-				capturedChains = append(capturedChains, chain)
+			// chain := chainCache[neighbor]
+			if newChain.IsDead() { 
+				totalCaptured += newChain.StoneCount
+				capturedChains = append(capturedChains, newChain)
 			}
 		}
 	}
