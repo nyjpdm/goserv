@@ -110,16 +110,29 @@ func (tree *GoTree) MakeMove(move int) error {
 	neighbors := getNeighbors(move, tree.BoardSize)
 	enemyNeighborCount := 0
 
+	// Создаем кэш для защиты от повторного прохождения чейнов при обходе соседей
+	chainCache := make(map[int]*Chain)
+
 	// Для каждого соседнего-вражеского камня проверяем жизнь его группы 
 	// # Адреса новых переменных enemyChain уникальны! => корректно
 	for _, neighbor := range neighbors {
 		if tree.isEnemyStone(tempBoard[neighbor]) {
-			enemyChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
-			if enemyChain.IsDead() { 
-				totalCaptured += enemyChain.StoneCount
-				capturedChains = append(capturedChains, enemyChain)
-			}
 			enemyNeighborCount++
+
+			if _, exists := chainCache[neighbor]; !exists {
+				newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
+
+				// Кэшируем все камни цепи
+				for pos := range newChain.ChainMap {
+					chainCache[pos] = newChain
+				}
+			}
+
+			chain := chainCache[neighbor]
+			if chain.IsDead() { 
+				totalCaptured += chain.StoneCount
+				capturedChains = append(capturedChains, chain)
+			}
 		}
 	}
 
@@ -187,9 +200,7 @@ func (color PointColor) Opposite() PointColor {
 func removeCapturedStones(Board []PointColor, capturedChains []*Chain) {
     for _, chain := range capturedChains {
         for pos := range chain.ChainMap {
-            if chain.ChainMap[pos] {
-                Board[pos] = empty
-            }
+			Board[pos] = empty
         }
     }
 }
