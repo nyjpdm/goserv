@@ -103,6 +103,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		"accepted":     move_result == nil,
 		"boardState":   stringBoard(ourgame), // возвращаем клиенту
 		"playingColor": string(ourgame.CurrentNode.LastMoveColor.Opposite()),
+		"blackScore":   ourgame.CurrentNode.BlackCaptures,
+		"whiteScore":   ourgame.CurrentNode.WhiteCaptures,
 	}
 
 	json.NewEncoder(w).Encode(response)

@@ -143,8 +143,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
 	if totalCaptured >= 1 {
-		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor {
-			/*&& enemyNeighborCount == 4 */
+		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 {
 			return fmt.Errorf("Ko violation")
 		}
 	} else {
