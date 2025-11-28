@@ -4,13 +4,6 @@ import (
 	"fmt"
 )
 
-// import (
-// 	"bufio"
-// 	"os"
-// 	"strconv"
-// 	"strings"
-// )
-
 func main() {
 	settings := GameSettings{BoardSize: 7}
 	tree := NewGoTree(settings)

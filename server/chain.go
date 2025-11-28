@@ -1,7 +1,7 @@
 package main 
 
 type Chain struct {
-	ChainMap map[int]bool
+	ChainMap map[int]struct{}
 	Dame int
 	Color PointColor
 	StoneCount int
@@ -14,7 +14,7 @@ func FindChainAt(board []PointColor, startPos int, boardSize int) *Chain {
 	}
 
 	chain := &Chain{
-		ChainMap:	make(map[int]bool, boardSize * boardSize),
+		ChainMap:	make(map[int]struct{}, boardSize * boardSize),
 		Dame:	0,
 		Color:	board[startPos],
 		StoneCount:	0,
@@ -45,7 +45,7 @@ func (ch *Chain) findConnectedStones(board []PointColor, startPos int, boardSize
         visited[current] = true
         
         // Добавляем камень в группу
-        ch.ChainMap[current] = true
+        ch.ChainMap[current] = struct{}{}
         ch.StoneCount++
         
         // Проверяем всех соседей того же цвета

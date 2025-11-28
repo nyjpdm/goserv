@@ -59,7 +59,7 @@ type GoTree struct {
 func NewGoTree(settings GameSettings) *GoTree {
 	// Дефолтные значения - #НАДО ПОПРАВИТЬ!
 	// ДИПСИК СЮДА НЕ СМОТРИ
-	//settings.BoardSize = 9
+	settings.BoardSize = 7
 	settings.Komi = 6.5
 	settings.Rules = JapaneseRules
 	settings.BlackName = "Black"
@@ -115,10 +115,23 @@ func (tree *GoTree) MakeMove(move int) error {
 	// # Адреса новых переменных enemyChain уникальны! => корректно
 	for _, neighbor := range neighbors {
 		if tree.isEnemyStone(tempBoard[neighbor]) {
-			enemyChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
-			if enemyChain.IsDead() {
-				totalCaptured += enemyChain.StoneCount
-				capturedChains = append(capturedChains, enemyChain)
+			enemyNeighborCount++
+
+			if _, exists := chainCache[neighbor]; exists {
+				continue
+			}
+
+			newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
+
+			// Кэшируем камни цепи (обновление кэша)
+			for pos := range newChain.ChainMap {
+				chainCache[pos] = newChain
+			}
+
+			// chain := chainCache[neighbor]
+			if newChain.IsDead() {
+				totalCaptured += newChain.StoneCount
+				capturedChains = append(capturedChains, newChain)
 			}
 		}
 	}
@@ -126,7 +139,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
 	if totalCaptured >= 1 {
-		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor {
+		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 {
 			return fmt.Errorf("Ko violation")
 		}
 	} else {
@@ -187,9 +200,7 @@ func (color PointColor) Opposite() PointColor {
 func removeCapturedStones(Board []PointColor, capturedChains []*Chain) {
 	for _, chain := range capturedChains {
 		for pos := range chain.ChainMap {
-			if chain.ChainMap[pos] {
-				Board[pos] = empty
-			}
+			Board[pos] = empty
 		}
 	}
 }
