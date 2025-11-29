@@ -48,6 +48,7 @@ func main() {
 	}
 	runServer()
 }
+
 func stringBoard(tree *GoTree) string {
 	res := ""
 	boardSize := tree.BoardSize

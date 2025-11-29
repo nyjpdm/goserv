@@ -8,7 +8,7 @@ type Chain struct {
 }
 
 func FindChainAt(board []PointColor, startPos int, boardSize int) *Chain {
-	// Проверяем, что начальная пункт startPos не пуст
+	// Проверяем, что начальный пункт startPos не пуст
 	if board[startPos] == empty {
 		return nil
 	}
@@ -32,7 +32,7 @@ func FindChainAt(board []PointColor, startPos int, boardSize int) *Chain {
 
 // findConnectedStones находит все камни, связанные с startPos
 func (ch *Chain) findConnectedStones(board []PointColor, startPos int, boardSize int) {
-    visited := make(map[int]bool, boardSize*boardSize)
+    visited := make(map[int]bool, boardSize * boardSize)
     queue := []int{startPos}
     
     for len(queue) > 0 {

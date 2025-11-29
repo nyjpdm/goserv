@@ -116,7 +116,6 @@ func (tree *GoTree) MakeMove(move int) error {
 	chainCache := make(map[int]*Chain)
 
 	// Для каждого соседнего-вражеского камня проверяем жизнь его группы
-	// # Адреса новых переменных enemyChain уникальны! => корректно
 	for _, neighbor := range neighbors {
 		if tree.isEnemyStone(tempBoard[neighbor]) {
 			enemyNeighborCount++
@@ -127,7 +126,7 @@ func (tree *GoTree) MakeMove(move int) error {
 
 			newChain := FindChainAt(tempBoard, neighbor, tree.BoardSize)
 
-			// Кэшируем камни цепи (обновление кэша)
+			// Добавляем в кэш камни newChain
 			for pos := range newChain.ChainMap {
 				chainCache[pos] = newChain
 			}
@@ -143,7 +142,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
 	if totalCaptured >= 1 {
-		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 {
+		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 - countOutOfBoundsNeighbors(move, tree.BoardSize) {
 			return fmt.Errorf("Ko violation")
 		}
 	} else {
@@ -235,6 +234,26 @@ func getNeighbors(pos, boardSize int) []int {
 	if col < boardSize-1 {
 		neighbors = append(neighbors, pos+1)
 	}
-
 	return neighbors
+}
+
+// Возвращает количество соседей, которые выходят за границы доски
+func countOutOfBoundsNeighbors(pos, boardSize int) int {
+	row := pos / boardSize
+	col := pos % boardSize
+	count := 0 
+
+	 if row == 0 {
+        count++
+    }
+    if row == boardSize - 1 {
+        count++
+    }
+    if col == 0 {
+        count++
+    }
+    if col == boardSize - 1 {
+        count++
+    }
+    return count
 }
