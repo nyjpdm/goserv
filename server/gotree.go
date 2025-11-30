@@ -20,6 +20,12 @@ const (
 	ChineseRules
 )
 
+const (
+    Pass = -1
+    Resign = -2 
+    NoMove = -3
+)
+
 type GameSettings struct {
 	BoardSize int
 	Komi      float64
@@ -72,7 +78,7 @@ func NewGoTree(settings GameSettings) *GoTree {
 
 	root := &GoNode{
 		Board:         Board,
-		LatestMove:    -1,
+		LatestMove:    NoMove,
 		NodeOrder:     0,
 		LastMoveColor: white,
 	}
@@ -94,12 +100,45 @@ func (tree *GoTree) MakeMove(move int) error {
 		}
 	}
 
+	// Обработка Pass (значение -1) и resign (значение -2)
+	if move == Pass || move == Resign {
+		newNode := &GoNode{
+			Parent:		tree.CurrentNode,
+			Children:		[]*GoNode{},
+			Board:		append([]PointColor(nil), tree.CurrentNode.Board...),
+			LatestMove:		move,
+			NodeOrder:		tree.CurrentNode.NodeOrder + 1,
+			LastMoveColor:		tree.CurrentNode.LastMoveColor.Opposite(),
+			BlackCaptures:		tree.CurrentNode.BlackCaptures,
+			WhiteCaptures:		tree.CurrentNode.WhiteCaptures,
+		}
+
+		// Для resign нужно установить результат
+		if move == Resign {
+			if tree.CurrentNode.LastMoveColor == black {
+				tree.Result = "B+Resign"
+				tree.Winner = tree.BlackName
+			} else {
+				tree.Result = "W+Resign"
+				tree.Winner = tree.WhiteName
+			}
+		}
+
+		// Записываем в children
+		tree.CurrentNode.Children = append(tree.CurrentNode.Children, newNode)
+
+		// Переходим на новый узел
+		tree.CurrentNode = newNode
+
+		return nil
+	}
+
 	// #2 Базовая валидация (проверка на диапозон и свободный пункт)
 	if move < 0 || move >= tree.BoardSize*tree.BoardSize {
 		return fmt.Errorf("Move %d out of board range", move)
 	}
 	if tree.CurrentNode.Board[move] != empty {
-		return fmt.Errorf("Board %d alreday occupied", move)
+		return fmt.Errorf("Board %d already occupied", move)
 	}
 
 	// Для проверки хода создаем tempBoard с новым ходом
@@ -131,7 +170,6 @@ func (tree *GoTree) MakeMove(move int) error {
 				chainCache[pos] = newChain
 			}
 
-			// chain := chainCache[neighbor]
 			if newChain.IsDead() {
 				totalCaptured += newChain.StoneCount
 				capturedChains = append(capturedChains, newChain)
@@ -149,7 +187,7 @@ func (tree *GoTree) MakeMove(move int) error {
 		// #5 Проверка на самоубийственный ход
 		myChain := FindChainAt(tempBoard, move, tree.BoardSize)
 		if myChain.IsDead() {
-			return fmt.Errorf("Suicide move at allowed")
+			return fmt.Errorf("Suicide move not allowed")
 		}
 	}
 
@@ -182,7 +220,7 @@ func (tree *GoTree) MakeMove(move int) error {
 		WhiteCaptures: whiteCaptures,
 	}
 
-	// Добавляем узел в GoTree
+	// Записываем в children
 	tree.CurrentNode.Children = append(tree.CurrentNode.Children, newNode)
 
 	// Переходим на новый узел
