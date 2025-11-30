@@ -463,7 +463,7 @@
         }
 
         // Обновите функцию handleCellClick чтобы убирать hover при клике
-        function handleCellClick(x, y) {
+        async function handleCellClick(x, y) {
             // Сначала убираем hover-эффект
             handleCellHoverLeave();
             
@@ -485,7 +485,8 @@
                 coordinate: `${coordinates[x]}${y + 1}`,
                 timestamp: new Date().toLocaleTimeString()
             };
-            sendRequest(move, "none");
+            const data = await sendRequest(move, "none");
+            handleServerResponse(data);
             moveHistory.push(move);
             
             console.log(`Ход отправлен: ${currentPlayer} на (${x}, ${y})`);
@@ -552,8 +553,10 @@
         }
 
         // Очистка доски
-        function clearBoard() {
-            sendRequest(null, "clear board");
+        async function clearBoard() {
+
+            const data = await sendRequest(null, "clear board");
+            handleServerResponse(data);
             // Убираем hover-эффект
             handleCellHoverLeave();
             
@@ -573,7 +576,7 @@
         }
 
         // Пас (пропуск хода)
-        function passMove() {
+        async function passMove() {
             moveHistory.push({
                 player: currentPlayer,
                 x: -1,
@@ -588,8 +591,8 @@
                 coordinate: 'PASS',
                 timestamp: new Date().toLocaleTimeString()
             };
-            sendRequest(move, "none");
-
+            const data = await sendRequest(move, "none");
+            handleServerResponse(data);
             console.log(`Игрок ${currentPlayer} пропустил ход`);
             //switchPlayer();
             updateMoveLog();
@@ -598,7 +601,7 @@
         // Имитация ответа сервера
         function simulateServerResponse() {
             console.log('🔔 Имитация ответа сервера: ход принят');
-            sendRequest()
+           // sendRequest()
             // В реальном приложении здесь бы обрабатывался ответ сервера
             // и обновлялось состояние доски согласно ответу
             
@@ -665,39 +668,47 @@
         }
 
 
-        function sendRequest(move, actq) {
-    fetch('http://localhost:8080/api', {
-            method: 'POST',
-            headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: 'hello',
-                    move: move,
-                    action: actq,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Получен ответ от сервера:', data);
-                
-                if (data.status === "ok" && data.boardState) {
-                    document.getElementById('boardInput').value = data.boardState;
-                    loadBoardFromText();
-                    console.log("Доска обновлена по данным сервера");
-                    if(data.playingColor != currentPlayer) {// Меняем игрока ПОСЛЕ успешного ответа от сервера
-                        switchPlayer();
-                    }
-                    score = `captured - B:${data.blackScore}; W:${data.whiteScore}`;
-                    updatePlayerIndicator();
-                    
-                } else {
-                    console.error("Ошибка в ответе сервера:", data);
+        async function sendRequest(move, actq) {
+            try {
+                const response = await fetch('http://localhost:8080/api', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: 'hello',
+                        move: move,
+                        action: actq,
+                    })
+                });
+
+                const data = await response.json();
+                return data; // просто возвращаем результат
+            } catch (error) {
+                console.error('Ошибка при отправке запроса:', error);
+                return null; // или бросать ошибку, если хочешь обрабатывать выше
+            }
+        }
+        function handleServerResponse(data) {
+            if (!data) return;
+
+            console.log('Получен ответ от сервера:', data);
+
+            if (data.status === "ok" && data.boardState) {
+                document.getElementById('boardInput').value = data.boardState;
+                loadBoardFromText();
+                console.log("Доска обновлена по данным сервера");
+
+                if(data.playingColor != currentPlayer) {
+                    switchPlayer();
                 }
-            })
-            .catch(error => {
-                console.error('Ошибка:', error);
-            });
+
+                score = `captured - B:${data.blackScore}; W:${data.whiteScore}`;
+                updatePlayerIndicator();
+
+            } else {
+                console.error("Ошибка в ответе сервера:", data);
+            }
         }
 
         // Инициализация при загрузке страницы
