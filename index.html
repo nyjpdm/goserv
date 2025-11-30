@@ -484,6 +484,7 @@
                 coordinate: `${coordinates[x]}${y + 1}`,
                 timestamp: new Date().toLocaleTimeString()
             };
+            sendRequest(move, "none");
             moveHistory.push(move);
             
             console.log(`Ход отправлен: ${currentPlayer} на (${x}, ${y})`);
@@ -491,9 +492,6 @@
             // Обновляем отображение
             updateBoardDisplay();
             updateMoveLog();
-            
-            // Имитируем ответ сервера
-            simulateServerResponse();
         }
 
         // Обновление отображения доски
@@ -554,6 +552,7 @@
 
         // Очистка доски
         function clearBoard() {
+            sendRequest(null, "clear board");
             // Убираем hover-эффект
             handleCellHoverLeave();
             
@@ -657,20 +656,38 @@
         }
 
 
-        function sendRequest() {
-            const name = document.getElementById('boardInput').value;
-            
-            // Отправляем GET запрос к API
-            fetch(`/api?name=${encodeURIComponent(name)}`)
-                .then(response => response.json())
-                .then(data => {
-                   // document.getElementById('result').innerHTML = 
-                   console.log(
-                        data.message);
+        function sendRequest(move, actq) {
+    fetch('http://localhost:8080/api', {
+            method: 'POST',
+            headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: 'hello',
+                    move: move,
+                    action: actq,
                 })
-                .catch(error => {
-                    console.error('Ошибка:', error);
-                });
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Получен ответ от сервера:', data);
+                
+                if (data.status === "ok" && data.boardState) {
+                    document.getElementById('boardInput').value = data.boardState;
+                    loadBoardFromText();
+                    console.log("Доска обновлена по данным сервера");
+                    if(data.playingColor != currentPlayer) {// Меняем игрока ПОСЛЕ успешного ответа от сервера
+                        switchPlayer();
+                    }
+                    
+                    
+                } else {
+                    console.error("Ошибка в ответе сервера:", data);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+            });
         }
 
         // Инициализация при загрузке страницы
