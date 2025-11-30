@@ -21,9 +21,9 @@ const (
 )
 
 const (
-    Pass = -1
-    Resign = -2 
-    NoMove = -3
+	Pass   = -1
+	Resign = -2
+	NoMove = -3
 )
 
 type GameSettings struct {
@@ -103,14 +103,14 @@ func (tree *GoTree) MakeMove(move int) error {
 	// Обработка Pass (значение -1) и resign (значение -2)
 	if move == Pass || move == Resign {
 		newNode := &GoNode{
-			Parent:		tree.CurrentNode,
-			Children:		[]*GoNode{},
-			Board:		append([]PointColor(nil), tree.CurrentNode.Board...),
-			LatestMove:		move,
-			NodeOrder:		tree.CurrentNode.NodeOrder + 1,
-			LastMoveColor:		tree.CurrentNode.LastMoveColor.Opposite(),
-			BlackCaptures:		tree.CurrentNode.BlackCaptures,
-			WhiteCaptures:		tree.CurrentNode.WhiteCaptures,
+			Parent:        tree.CurrentNode,
+			Children:      []*GoNode{},
+			Board:         append([]PointColor(nil), tree.CurrentNode.Board...),
+			LatestMove:    move,
+			NodeOrder:     tree.CurrentNode.NodeOrder + 1,
+			LastMoveColor: tree.CurrentNode.LastMoveColor.Opposite(),
+			BlackCaptures: tree.CurrentNode.BlackCaptures,
+			WhiteCaptures: tree.CurrentNode.WhiteCaptures,
 		}
 
 		// Для resign нужно установить результат
@@ -180,7 +180,7 @@ func (tree *GoTree) MakeMove(move int) error {
 	// #3 Проверка на Ко (подходит ко всем правилам)
 	// #4 Если больше totalCaptured > 1, то можно сделать ход
 	if totalCaptured >= 1 {
-		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4 - countOutOfBoundsNeighbors(move, tree.BoardSize) {
+		if totalCaptured == 1 && tree.CurrentNode.Parent.Board[move] == tree.CurrentNode.Parent.LastMoveColor && enemyNeighborCount == 4-countOutOfBoundsNeighbors(move, tree.BoardSize) {
 			return fmt.Errorf("Ko violation")
 		}
 	} else {
@@ -279,19 +279,19 @@ func getNeighbors(pos, boardSize int) []int {
 func countOutOfBoundsNeighbors(pos, boardSize int) int {
 	row := pos / boardSize
 	col := pos % boardSize
-	count := 0 
+	count := 0
 
-	 if row == 0 {
-        count++
-    }
-    if row == boardSize - 1 {
-        count++
-    }
-    if col == 0 {
-        count++
-    }
-    if col == boardSize - 1 {
-        count++
-    }
-    return count
+	if row == 0 {
+		count++
+	}
+	if row == boardSize-1 {
+		count++
+	}
+	if col == 0 {
+		count++
+	}
+	if col == boardSize-1 {
+		count++
+	}
+	return count
 }

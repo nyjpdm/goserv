@@ -82,7 +82,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Name:", request.Name)
 	fmt.Println("Action: ", request.Action)
 	fmt.Printf("Move: %+v\n", request.Move)
-	if request.Move.X < 0 || request.Move.X > ourgame.BoardSize-1 || request.Move.Y < 0 || request.Move.Y > ourgame.BoardSize-1 {
+
+	if request.Move.X < -2 || request.Move.X > ourgame.BoardSize-1 || request.Move.Y < 0 || request.Move.Y > ourgame.BoardSize-1 {
 		http.Error(w, `{"error": "move outside bounds"}`, http.StatusBadRequest)
 		return
 	}

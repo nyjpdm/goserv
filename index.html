@@ -362,6 +362,7 @@
         let currentPlayer = 'B'; // 'B' для черных, 'W' для белых
         const BOARD_SIZE = 9;
         let moveHistory = [];
+        let score = ""
 
         // Инициализация доски
         function initializeBoard() {
@@ -580,9 +581,17 @@
                 coordinate: 'PASS',
                 timestamp: new Date().toLocaleTimeString()
             });
-            
+             const move = {
+                player: currentPlayer,
+                x: -1,
+                y: 0,
+                coordinate: 'PASS',
+                timestamp: new Date().toLocaleTimeString()
+            };
+            sendRequest(move, "none");
+
             console.log(`Игрок ${currentPlayer} пропустил ход`);
-            switchPlayer();
+            //switchPlayer();
             updateMoveLog();
         }
 
@@ -606,10 +615,10 @@
             
             if (currentPlayer === 'B') {
                 indicator.className = 'current-player player-black';
-                text.textContent = 'Черные';
+                text.textContent = 'Черные; ' + score;
             } else {
                 indicator.className = 'current-player player-white';
-                text.textContent = 'Белые';
+                text.textContent = 'Белые;' + score;
             }
         }
 
@@ -679,7 +688,8 @@
                     if(data.playingColor != currentPlayer) {// Меняем игрока ПОСЛЕ успешного ответа от сервера
                         switchPlayer();
                     }
-                    
+                    score = `captured - B:${data.blackScore}; W:${data.whiteScore}`;
+                    updatePlayerIndicator();
                     
                 } else {
                     console.error("Ошибка в ответе сервера:", data);
