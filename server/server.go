@@ -3,13 +3,21 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"path/filepath"
 	"runtime"
-	"strconv"
 )
 
+type User struct {
+	Name   string `json:"name"`
+	Status string `json:"status"`
+}
+type Game struct {
+	board       GoTree
+	whitePlayer User
+	blackPlayer User
+	Status      string
+}
 type MoveQuery struct {
 	Player     string `json:"player"`
 	X          int    `json:"x"`
@@ -24,6 +32,8 @@ type ApiRequest struct {
 }
 
 type Server struct {
+	players []User
+	games   []Game
 }
 
 var ourgame = NewGoTree(GameSettings{BoardSize: 9})
@@ -111,54 +121,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Обработчик формы
-func formHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
-		return
-	}
-
-	name := r.FormValue("name")
-	age := r.FormValue("age")
-	tmpl := `
-    <html>
-        <body>
-            <h1>Полученные данные:</h1>
-            <p>Имя: {{.Name}}</p>
-            <p>Возраст: {{.Age}}</p>
-            <a href="/">Назад</a>
-        </body>
-    </html>
-    `
-
-	data := struct {
-		Name string
-		Age  string
-	}{name, age}
-
-	t := template.Must(template.New("result").Parse(tmpl))
-	t.Execute(w, data)
-}
-
-// Обработчик калькулятора
-func calcHandler(w http.ResponseWriter, r *http.Request) {
-	aStr := r.URL.Query().Get("a")
-	bStr := r.URL.Query().Get("b")
-
-	a, _ := strconv.Atoi(aStr)
-	b, _ := strconv.Atoi(bStr)
-
-	result := a + b
-	fmt.Fprintf(w, "Сумма %d + %d = %d", a, b, result)
-}
-
 func runServer() {
 	// Регистрируем обработчики
 
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/api", apiHandler)
-	http.HandleFunc("/form", formHandler)
-	http.HandleFunc("/calc", calcHandler)
+	//http.HandleFunc("/form", formHandler)
+	//http.HandleFunc("/calc", calcHandler)
 
 	fmt.Println("Сервер запущен на http://localhost:8080")
 	fmt.Println("Структура проекта:")

@@ -54,6 +54,7 @@
             gap: 0;
             background: #DCB35C;
             position: relative;
+            user-select: none;
         }
 
         /* Горизонтальные линии */
@@ -66,6 +67,7 @@
             height: 1px;
             background: black;
             transform: translateY(-50%);
+            user-select: none;
         }
 
         .board::after {
@@ -77,6 +79,7 @@
             height: 1px;
             background: black;
             transform: translateY(50%);
+            user-select: none;
         }
 
         .cell {
@@ -670,7 +673,7 @@
 
         async function sendRequest(move, actq) {
             try {
-                const response = await fetch('http://localhost:8080/api', {
+                const response = await fetch('http://localhost:8080/api', {//await fetch('https://jenyasemagogame.loca.lt/api', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -685,6 +688,7 @@
                 const data = await response.json();
                 return data; // просто возвращаем результат
             } catch (error) {
+                alert('Ошибка при отправке запроса:', error)
                 console.error('Ошибка при отправке запроса:', error);
                 return null; // или бросать ошибку, если хочешь обрабатывать выше
             }
