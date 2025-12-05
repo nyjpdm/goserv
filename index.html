@@ -726,6 +726,19 @@
 
             console.log('Получен ответ от сервера:', data);
 
+            if(data.msg == "your username"){
+                if(data.playingColor != currentPlayer){
+                    switchPlayer();
+                }
+                console.log("username:");
+                console.log(data.username);
+                
+                document.getElementById('boardInput').value = data.boardState;
+                loadBoardFromText();
+
+                return;
+            }
+
             if (data.status === "ok" && data.boardState) {
                 document.getElementById('boardInput').value = data.boardState;
                 loadBoardFromText();
