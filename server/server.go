@@ -16,7 +16,7 @@ import (
 type User struct {
 	Name   string          `json:"name"`
 	Status string          `json:"status"`
-	Conn   *websocket.Conn `json:"-"`
+	Conn   *websocket.Conn `json:"-"` //ссылка на соединение с игроком. у каждого клиента свое соединение и своя горутина его обрабаыввает
 }
 type GameRoom struct {
 	board       *GoTree
@@ -148,7 +148,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		ourServer.games[0].whitePlayer = &thisPlayer
 		playColor = white
 	}
-	mess := map[string]interface{}{ //отправляем данные игрока, которые (пока) создает сервер
+	mess := map[string]interface{}{ //отправляем исходные данные игрока, которые (пока) создает сервер
 		"status":       "ok",
 		"msg":          "your username",
 		"playingColor": playColor,
@@ -162,7 +162,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func handleClient(conn *websocket.Conn, thisPlayer User) {
+func handleClient(conn *websocket.Conn, thisPlayer User) { //обработка одного клиента
 
 	defer conn.Close()
 
@@ -195,17 +195,6 @@ func handleClient(conn *websocket.Conn, thisPlayer User) {
 		}
 
 		sendBoard(ourServer.games[0].board, ourServer.games[0].board.CurrentNode.LastMoveColor.Opposite(), conn, res == nil)
-		// response := map[string]interface{}{
-		// 	"status":       "ok",
-		// 	"msg":          "updating board",
-		// 	"accepted":     res == nil,
-		// 	"boardState":   stringBoard(ourgame.board), // возвращаем клиенту
-		// 	"playingColor": string(ourgame.board.CurrentNode.LastMoveColor.Opposite()),
-		// 	"blackScore":   ourgame.board.CurrentNode.BlackCaptures,
-		// 	"whiteScore":   ourgame.board.CurrentNode.WhiteCaptures,
-		// }
-		// resmess, _ := json.Marshal(response)
-		// conn.WriteMessage(websocket.TextMessage, resmess)
 
 	}
 

@@ -1,0 +1,295 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .game-area {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .board-container {
+            background: #DCB35C;
+            padding: 30px; /* УВЕЛИЧИТЬ с 20px до 30px */
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(9, 40px);
+            grid-template-rows: repeat(9, 40px);
+            gap: 0;
+            background: #DCB35C;
+            position: relative;
+            user-select: none;
+        }
+
+        /* Горизонтальные линии */
+        .board::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: black;
+            transform: translateY(-50%);
+            user-select: none;
+        }
+
+        .board::after {
+            content: '';
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: black;
+            transform: translateY(50%);
+            user-select: none;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Вертикальные линии между клетками */
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            background: black;
+            transform: translateX(-50%);
+            height: 100%;
+            z-index: 0; /* Убедитесь что линии ниже камней */
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 1px;
+            background: black;
+            transform: translateY(-50%);
+            width: 100%;
+            z-index: 1; /* Убедитесь что линии ниже камней */
+        }
+
+        /* Убираем лишние линии по краям */
+        /* .cell:first-child::before,
+        .cell:nth-child(9n+1)::before {
+            display: none;
+        } */
+
+        .cell:nth-child(-n+9)::after {
+            display: none;
+        }
+
+        .stone {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            position: relative;
+            z-index: 200; /* Реальные камни выше hover-камней */
+            box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+
+        /* .stone:hover {
+            transform: scale(1.1);
+        } */
+
+        .black {
+            background: radial-gradient(circle at 30% 30%, #666, #000);
+            border: 1px solid #333;
+        }
+
+        .white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+            border: 1px solid #999;
+        }
+
+        .cell.hover-black::after,
+        .cell.hover-white::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* Центрируем камень */
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .cell.hover-black::after {
+            background: radial-gradient(circle at 10% 10%, rgba(102,102,102,0.5), rgba(0,0,0,0.5));
+           /* border: 1px solid rgba(51,51,51,0.5);*/
+        }
+
+        .cell.hover-white::after {
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5), rgba(221,221,221,0.5));
+            border: 1px solid rgba(153,153,153,0.5);
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 15px;
+            min-width: 300px;
+            text-align: left;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        h2, h3 {
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: rgba(255,255,255,0.9);
+        }
+
+        .status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 18px;
+        }
+
+        .current-player {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 0 10px;
+            vertical-align: middle;
+        }
+
+        .player-black {
+            background: #000;
+            border: 1px solid #333;
+        }
+
+        .player-white {
+            background: #fff;
+            border: 1px solid #999;
+        }
+
+        .coordinates {
+            position: absolute;
+            font-size: 12px;
+            color: rgba(0,0,0,0.6);
+            pointer-events: none;
+            font-weight: bold; /* ДОБАВИТЬ: сделать текст жирнее */
+        }
+
+        .coord-x {
+            /* ИЗМЕНИТЬ: разместить внутри доски внизу */
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .coord-y {
+            /* ИЗМЕНИТЬ: разместить внутри доски справа */
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .move-log {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .log-black {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .log-white {
+            background: rgba(255,255,255,0.2);
+        }
